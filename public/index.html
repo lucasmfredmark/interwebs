@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Interwebs</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <!-- Load required Bootstrap and BootstrapVue CSS -->
+        <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+        <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
+        <!-- Load polyfills to support older browsers -->
+        <script src="//polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver" crossorigin="anonymous"></script>
+        <!-- Load Vue followed by BootstrapVue -->
+        <script src="//unpkg.com/vue@latest/dist/vue.min.js"></script>
+        <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+        <!-- Load the following for BootstrapVueIcons support -->
+        <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <b-jumbotron fluid header="Interwebs" lead="Search the interwebs!" class="mb-3 mb-sm-4">
+                <b-form @submit="onSubmit">
+                    <b-input-group size="lg">
+                        <b-form-input :placeholder="randomSearchQuery" v-model="searchQuery" autocomplete="off" autofocus required></b-form-input>
+                        <b-input-group-append>
+                            <b-button type="submit" variant="primary">Search</b-button>
+                        </b-input-group-append>
+                    </b-input-group>
+                </b-form>
+            </b-jumbotron>
+            <b-container class="mb-3 mb-sm-4">
+                <div v-if="isLoading">
+                    <div v-for="i in 5">
+                        <b-skeleton animation="wave" width="85%"></b-skeleton>
+                        <b-skeleton animation="wave" width="55%"></b-skeleton>
+                        <b-skeleton animation="wave" width="70%" class="mb-4"></b-skeleton>
+                    </div>
+                </div>
+                <div v-else>
+                    <div v-if="error">
+                        <b-alert show variant="danger" v-if="error">
+                            <h4 class="alert-heading">Could not fetch search results</h4>
+                            <p>Something went wrong. Please try again later.</p>
+                            <hr />
+                            <p class="text-monospace mb-0">Error message: {{ error }}</p>
+                        </b-alert>
+                    </div>
+                    <div v-else>
+                        <div v-if="searchResults.length">
+                            <p class="font-weight-light">Found {{ searchResultsCount }} results.</p>
+                            <b-list-group class="mb-3 mb-sm-4">
+                                <b-list-group-item :href="page.url" class="flex-column align-items-start" v-for="page in searchResults">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ page.title }}</h5>
+                                    </div>
+                                    <p class="mb-1">{{ page.content }}</p>
+                                    <small>{{ page.url }}</small>
+                                </b-list-group-item>
+                            </b-list-group>
+                        </div>
+                        <div v-else>
+                            <h2 class="text-center">No results. Try to refine your search query.</h2>
+                        </div>
+                    </div>
+                </div>
+            </b-container>
+        </div>
+        <script>
+            var app = new Vue({
+                el: '#app',
+                data: () => {
+                    const queries = [
+                        'Cat memes',
+                        'Brownie recipes',
+                        'Donald Trump',
+                        'Netflix',
+                        'YouTube',
+                        'Facebook'
+                    ]
+
+                    return {
+                        isLoading: false,
+                        error: null,
+                        searchQuery: '',
+                        randomSearchQuery: queries[queries.length * Math.random() | 0],
+                        searchResults: [],
+                        searchResultsCount: 0
+                    }
+                },
+                methods: {
+                    onSubmit(event) {
+                        event.preventDefault()
+
+                        this.isLoading = true
+                        this.error = null
+
+                        setTimeout(() => {
+                            fetch('/search/' + this.searchQuery)
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error(response.statusText)
+                                    }
+
+                                    return response
+                                })
+                                .then(response => response.json())
+                                .then(({ count, results }) => {
+                                    this.searchResultsCount = count
+                                    this.searchResults = results.map(page => ({
+                                        ...page,
+                                        content: page.content.substr(0, 100)
+                                    }))
+                                    this.isLoading = false
+                                })
+                                .catch(e => {
+                                    this.isLoading = false
+                                    this.error = e.message
+                                })
+                        }, 500)
+                    }
+                }
+            })
+        </script>
+    </body>
+</html>

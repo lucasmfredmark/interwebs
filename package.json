@@ -1,0 +1,26 @@
+{
+  "name": "interwebs",
+  "version": "1.0.0",
+  "description": "Search the interwebs!",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node -r esm src/server.js",
+    "start:crawler": "node -r esm src/crawler.js",
+    "migrate:latest": "knex migrate:latest --esm",
+    "migrate:rollback": "knex migrate:rollback --esm"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.5",
+    "esm": "^3.2.25",
+    "knex": "^0.21.15",
+    "koa": "^2.13.1",
+    "koa-router": "^10.0.0",
+    "koa-static": "^5.0.0",
+    "mysql2": "^2.2.5",
+    "node-cleanup": "^2.1.2",
+    "simplecrawler": "^1.1.9",
+    "string-strip-html": "^7.0.3"
+  }
+}
