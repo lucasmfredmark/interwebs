@@ -1,26 +1,32 @@
 import Koa from 'koa'
 import Router from 'koa-router'
 import serve from 'koa-static'
-import { pagesDB } from './db'
+import esClient from './elasticsearch'
 
 const app = new Koa()
 const router = new Router()
 const PAGE_SIZE = 10
 
-router.get('/search/:q', async ctx => {
-    const results = await pagesDB()
-        .select(['url', 'title', 'content'])
-        .whereRaw('MATCH (title, content) AGAINST (?)', [ctx.params.q])
-        .offset(Math.max(0, (Number(ctx.query.page) || 0) - 1) * PAGE_SIZE)
-        .limit(PAGE_SIZE)
+router.get('/search/:query', async ctx => {
+    const { query } = ctx.params
+    const { page } = ctx.query
+
+    const { body: { hits: { total, hits } } } = await esClient.search({
+        index: 'search',
+        body: {
+            query: {
+                match: {
+                    title: query
+                }
+            },
+            from: Math.max(0, (Number(page) || 0) - 1) * PAGE_SIZE,
+            size: PAGE_SIZE
+        }
+    })
 
     ctx.body = {
-        count: results.length, // should be total
-        results: results.map(result => ({
-            url: result.url,
-            title: result.title,
-            content: result.content
-        }))
+        count: total.value,
+        results: hits.map(hit => ({ ...hit._source }))
     }
 })
 
@@ -28,4 +34,4 @@ app.use(serve('public'))
 app.use(router.routes())
 app.use(router.allowedMethods())
 
-app.listen(3000)
+app.listen(80)

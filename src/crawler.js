@@ -1,8 +1,9 @@
+import crypto from 'crypto'
 import Crawler from 'simplecrawler'
 import cheerio from 'cheerio'
 import stripHtml from 'string-strip-html'
 import cleanup from 'node-cleanup'
-import { pagesDB } from './db'
+import esClient from './elasticsearch'
 
 const crawler = new Crawler('https://en.wikipedia.org/wiki/Donald_Trump')
 
@@ -23,31 +24,18 @@ crawler.on('complete', () => console.log('Stopped crawling...'))
 crawler.on('error', err => console.error(err))
 
 crawler.on('fetchcomplete', function (queueItem, responseBody) {
-    console.log(queueItem.url)
     const resume = this.wait()
 
-    pagesDB()
-        .where('url', queueItem.url)
-        .first()
-        .then(page => {
-            if (page) {
-                return resume()
-            }
+    const { url } = queueItem
+    const { title, content } = getTitleAndContent(responseBody)
 
-            const { title, content } = getTitleAndContent(responseBody)
-
-            return pagesDB()
-                .insert({ url: queueItem.url, title, content })
-                .then(() => resume())
-                .catch(err => {
-                    console.error(err)
-                    resume()
-                })
-        })
-        .catch(err => {
-            console.error(err)
-            resume()
-        })
+    esClient.index({
+        id: crypto.createHash('sha1').update(url).digest('hex'),
+        index: 'search',
+        body: { url, title, content }
+    })
+        .catch(console.error)
+        .finally(resume)
 })
 
 crawler.queue.defrost('queue.json', err => {
