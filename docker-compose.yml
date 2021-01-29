@@ -8,6 +8,8 @@ services:
     build: .
     ports:
       - 80:80
+    restart: on-failure
   crawler:
     build: .
     command: npm run start:crawler
+    restart: on-failure

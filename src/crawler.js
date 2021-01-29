@@ -21,7 +21,7 @@ crawler.filterByDomain = false
 
 crawler.on('crawlstart', () => console.log('Started crawling...'))
 crawler.on('complete', () => console.log('Stopped crawling...'))
-crawler.on('error', err => console.error(err))
+crawler.on('error', console.error)
 
 crawler.on('fetchcomplete', function (queueItem, responseBody) {
     const resume = this.wait()
@@ -38,18 +38,18 @@ crawler.on('fetchcomplete', function (queueItem, responseBody) {
         .finally(resume)
 })
 
-crawler.queue.defrost('queue.json', err => {
-    if (!err) {
+crawler.queue.defrost('queue.json', error => {
+    if (!error) {
         console.log('Loaded queue backup successfully')
         return crawler.start()
     }
 
-    if (err.code === 'ENOENT') {
+    if (error.code === 'ENOENT') {
         console.log('No queue backup was loaded - using default URL')
         return crawler.start()
     }
 
-    throw err
+    throw error
 })
 
 const getTitleAndContent = html => {
@@ -65,10 +65,10 @@ const getTitleAndContent = html => {
 cleanup((exitCode, signal) => {
     if (signal) {
         crawler.stop(true)
-        crawler.queue.freeze('queue.json', err => {
-            if (err) {
+        crawler.queue.freeze('queue.json', error => {
+            if (error) {
                 console.error('Could not backup queue before exiting')
-                console.error(err)
+                console.error(error)
             }
 
             process.kill(process.pid, signal)
