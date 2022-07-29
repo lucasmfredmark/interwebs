@@ -1,11 +1,7 @@
 import { Client } from '@elastic/elasticsearch'
 
-const client = new Client({ node: 'http://elasticsearch:9200' })
+if (!process.env.ELASTICSEARCH_URL) {
+  throw new Error('Missing environment variable ELASTICSEARCH_URL')
+}
 
-client.ping()
-    .catch(error => {
-        console.error(error)
-        process.exit(1)
-    })
-
-export default client
+export default new Client({ node: process.env.ELASTICSEARCH_URL })

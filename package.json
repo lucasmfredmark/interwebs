@@ -9,8 +9,6 @@
     "migrate:latest": "knex migrate:latest --esm",
     "migrate:rollback": "knex migrate:rollback --esm"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@elastic/elasticsearch": "^7.10.0",
     "cheerio": "^1.0.0-rc.5",

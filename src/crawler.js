@@ -38,19 +38,21 @@ crawler.on('fetchcomplete', function (queueItem, responseBody) {
         .finally(resume)
 })
 
-crawler.queue.defrost('queue.json', error => {
-    if (!error) {
-        console.log('Loaded queue backup successfully')
-        return crawler.start()
-    }
+const start = () => {
+    crawler.queue.defrost('queue.json', error => {
+        if (!error) {
+            console.log('Loaded queue backup successfully')
+            return crawler.start()
+        }
 
-    if (error.code === 'ENOENT') {
-        console.log('No queue backup was loaded - using default URL')
-        return crawler.start()
-    }
+        if (error.code === 'ENOENT') {
+            console.log('No queue backup was loaded - using default URL')
+            return crawler.start()
+        }
 
-    throw error
-})
+        throw error
+    })
+}
 
 const getTitleAndContent = html => {
     // TODO: Extract data from meta tags as well
@@ -78,3 +80,5 @@ cleanup((exitCode, signal) => {
         return false
     }
 })
+
+esClient.ping().then(start)

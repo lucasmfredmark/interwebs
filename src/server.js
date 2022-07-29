@@ -11,7 +11,7 @@ router.get('/search/:query', async ctx => {
     const { query } = ctx.params
     const { page } = ctx.query
 
-    const { body: { hits: { total, hits } } } = await esClient.search({
+    const { body: { took, hits: { total, hits } } } = await esClient.search({
         index: 'search',
         body: {
             query: {
@@ -25,6 +25,7 @@ router.get('/search/:query', async ctx => {
     })
 
     ctx.body = {
+        time: took / 1000,
         count: total.value,
         results: hits.map(hit => ({ ...hit._source }))
     }

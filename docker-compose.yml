@@ -2,14 +2,19 @@ version: "3.9"
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
+    restart: unless-stopped
     environment:
       - discovery.type=single-node
   web:
     build: .
     ports:
       - 80:80
-    restart: on-failure
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
   crawler:
     build: .
     command: npm run start:crawler
-    restart: on-failure
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
